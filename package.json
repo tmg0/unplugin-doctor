@@ -1,7 +1,7 @@
 {
   "name": "unplugin-doctor",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "author": "",
   "license": "MIT",
@@ -18,7 +18,6 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "hookable": "^5.5.3",
     "unplugin": "^1.14.1"
   },
   "devDependencies": {
