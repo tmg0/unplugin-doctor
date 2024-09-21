@@ -1,10 +1,25 @@
-import { createUnplugin, type TransformResult, type UnpluginInstance, type UnpluginOptions } from 'unplugin'
+import { createUnplugin, TransformResult, type UnpluginInstance, type UnpluginOptions } from 'unplugin'
 
 export interface DoctorOptions {
-  buildStart?: (options: UnpluginOptions) => void | Promise<void>
-  load?: (id: string, transformResult: TransformResult, options: UnpluginOptions) => void | Promise<void>
-  transform?: (id: string, code: string, transformResult: TransformResult, options: UnpluginOptions) => void | Promise<void>
-  buildEnd?: (options: UnpluginOptions) => void | Promise<void>
+  buildStart?: (ctx: DoctorContext) => void | Promise<void>
+  load?: (ctx: DoctorContext) => void | Promise<void>
+  transform?: (ctx: DoctorContext) => void | Promise<void>
+  buildEnd?: (ctx: DoctorContext) => void | Promise<void>
+}
+
+export type DoctorContext = ReturnType<typeof createContext>
+
+export function createContext(options: UnpluginOptions) {
+  const _id = ''
+  const _code = ''
+  const _transformResult = '' as TransformResult
+
+  return {
+    id: _id,
+    code: _code,
+    transformResult: _transformResult,
+    options,
+  }
 }
 
 export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<DoctorOptions | undefined>((lifecycle = {}) => {
@@ -12,33 +27,42 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
   const rawFactories = Array.isArray(factory) ? factory : [factory]
   const isMultipe = rawFactories.length > 1
 
-  const rawOptions: UnpluginOptions[] = rawFactories.map(options => ({
-    ...options,
+  const rawOptions: UnpluginOptions[] = rawFactories.map((options) => {
+    const ctx = createContext(options)
 
-    async buildStart(this) {
-      await options.buildStart?.bind(this)()
-      await lifecycle.buildStart?.(options)
-    },
+    return {
+      ...options,
 
-    async load(this, id) {
-      const transformResult = await options.load?.bind(this)(id)
-      if (transformResult)
-        await lifecycle.load?.(id, transformResult, options)
-      return transformResult
-    },
+      async buildStart(this) {
+        await options.buildStart?.bind(this)()
+        await lifecycle.buildStart?.(ctx)
+      },
 
-    async transform(this, code, id) {
-      const transformResult = await options.transform?.bind(this)(code, id)
-      if (transformResult)
-        await lifecycle.transform?.(id, code, transformResult, options)
-      return transformResult
-    },
+      async load(this, id) {
+        ctx.id = id
+        const transformResult = await options.load?.bind(this)(id)
+        ctx.transformResult = transformResult
+        if (transformResult)
+          await lifecycle.load?.(ctx)
+        return transformResult
+      },
 
-    async buildEnd(this) {
-      await options.buildEnd?.bind(this)()
-      await lifecycle.buildEnd?.(options)
-    },
-  }))
+      async transform(this, code, id) {
+        ctx.id = id
+        ctx.code = code
+        const transformResult = await options.transform?.bind(this)(code, id)
+        ctx.transformResult = transformResult
+        if (transformResult)
+          await lifecycle.transform?.(ctx)
+        return transformResult
+      },
+
+      async buildEnd(this) {
+        await options.buildEnd?.bind(this)()
+        await lifecycle.buildEnd?.(ctx)
+      },
+    }
+  })
 
   if (isMultipe)
     return rawOptions
