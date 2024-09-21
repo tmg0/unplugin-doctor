@@ -1,14 +1,17 @@
-import { createHooks } from 'hookable'
+import { createHooks, type Hookable } from 'hookable'
 import { createUnplugin, type UnpluginOptions } from 'unplugin'
 
-export type DoctorOptions = Array<UnpluginOptions> | UnpluginOptions
+export interface DoctorOptions {
+  unplugin :Array<UnpluginOptions> | UnpluginOptions
+  lifecycle: (hooks: Hookable<Record<string, any>, string>) => void
+}
 
-export const unplugin = createUnplugin<DoctorOptions>((unpluginOptions) => {
+export const unplugin = createUnplugin<DoctorOptions>(({ unplugin }) => {
   const hooks = createHooks()
-  const rawOptions = Array.isArray(unpluginOptions) ? unpluginOptions : [unpluginOptions]
-  const isMultipe = rawOptions.length > 1
+  const unpluginOptions = Array.isArray(unplugin) ? unplugin : [unplugin]
+  const isMultipe = unpluginOptions.length > 1
 
-  hooks.callHook('docker:setup', unpluginOptions)
+  hooks.callHook('docker:setup', unplugin)
 
   function normalizeHookName(name: string, options: UnpluginOptions) {
     return [
@@ -17,7 +20,7 @@ export const unplugin = createUnplugin<DoctorOptions>((unpluginOptions) => {
     ].filter(Boolean).join(':')
   }
 
-  const values: DoctorOptions = rawOptions.map(options => ({
+  const values: DoctorOptions['unplugin'] = unpluginOptions.map(options => ({
     ...options,
 
     async buildStart(this) {
