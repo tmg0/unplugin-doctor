@@ -3,25 +3,18 @@ import { createUnplugin } from 'unplugin'
 
 export interface DoctorOptions {
   buildStart?: (ctx: DoctorContext) => void | Promise<void>
-  beforeLoad?: (ctx: DoctorContext) => void | Promise<void>
-  afterLoad?: (ctx: DoctorContext) => void | Promise<void>
-  beforeTransform?: (ctx: DoctorContext) => void | Promise<void>
-  afterTransform?: (ctx: DoctorContext) => void | Promise<void>
+  beforeLoad?: (id: string, ctx: DoctorContext) => void | Promise<void>
+  afterLoad?: (id: string, code: TransformResult, ctx: DoctorContext) => void | Promise<void>
+  beforeTransform?: (id: string, code: string, ctx: DoctorContext) => void | Promise<void>
+  afterTransform?: (id: string, code: TransformResult, ctx: DoctorContext) => void | Promise<void>
   buildEnd?: (ctx: DoctorContext) => void | Promise<void>
 }
 
 export type DoctorContext = ReturnType<typeof createContext>
 
 export function createContext(options: UnpluginOptions) {
-  const _id = ''
-  const _code = ''
-  const _transformResult = undefined as TransformResult
-
   return {
-    id: _id,
-    code: _code,
-    transformResult: _transformResult,
-    options,
+    options
   }
 }
 
@@ -47,21 +40,16 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
       },
 
       async load(this, id) {
-        ctx.id = id
-        await lifecycle.beforeLoad?.(ctx)
+        await lifecycle.beforeLoad?.(id, ctx)
         const transformResult = await options.load?.bind(this)(id)
-        ctx.transformResult = transformResult
-        await lifecycle.afterLoad?.(ctx)
+        await lifecycle.afterLoad?.(id, transformResult, ctx)
         return transformResult
       },
 
       async transform(this, code, id) {
-        ctx.id = id
-        ctx.code = code
-        await lifecycle.beforeTransform?.(ctx)
+        await lifecycle.beforeTransform?.(id, code, ctx)
         const transformResult = await options.transform?.bind(this)(code, id)
-        ctx.transformResult = transformResult
-        await lifecycle.afterTransform?.(ctx)
+        await lifecycle.afterTransform?.(id, transformResult, ctx)
         return transformResult
       },
 

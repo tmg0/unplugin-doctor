@@ -1,6 +1,6 @@
 # unplugin-doctor
 
-🩺 Inject lifecycle hooks in [unplugin](https://github.com/unjs/unplugin) tools for better analysis or debug experience.
+🩺 Inject lifecycle hooks in [unplugin](https://github.com/unjs/unplugin) tools for develop experience.
 
 ## License
 
