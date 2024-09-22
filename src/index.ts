@@ -1,4 +1,5 @@
-import { createUnplugin, TransformResult, type UnpluginInstance, type UnpluginOptions } from 'unplugin'
+import type { TransformResult, UnpluginInstance, UnpluginOptions } from 'unplugin'
+import { createUnplugin } from 'unplugin'
 
 export interface DoctorOptions {
   buildStart?: (ctx: DoctorContext) => void | Promise<void>
@@ -24,12 +25,17 @@ export function createContext(options: UnpluginOptions) {
   }
 }
 
-export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<DoctorOptions | undefined>((lifecycle = {}) => {
-  const factory = unplugin.raw(options, {} as any)
-  const rawFactories = Array.isArray(factory) ? factory : [factory]
-  const isMultipe = rawFactories.length > 1
+function toArray<T>(array?: T | T[]): Array<T> {
+  array = array || []
+  if (Array.isArray(array))
+    return array
+  return [array]
+}
 
-  const rawOptions: UnpluginOptions[] = rawFactories.map((options) => {
+export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<DoctorOptions | undefined>((lifecycle = {}) => {
+  const rawPlugins = toArray(unplugin.raw(options, {} as any))
+
+  const rawOptions: UnpluginOptions[] = rawPlugins.map((options) => {
     const ctx = createContext(options)
 
     return {
@@ -66,7 +72,7 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
     }
   })
 
-  if (isMultipe)
+  if (rawPlugins.length > 1)
     return rawOptions
 
   return rawOptions[0]
