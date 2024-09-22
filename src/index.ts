@@ -2,8 +2,10 @@ import { createUnplugin, TransformResult, type UnpluginInstance, type UnpluginOp
 
 export interface DoctorOptions {
   buildStart?: (ctx: DoctorContext) => void | Promise<void>
-  load?: (ctx: DoctorContext) => void | Promise<void>
-  transform?: (ctx: DoctorContext) => void | Promise<void>
+  beforeLoad?: (ctx: DoctorContext) => void | Promise<void>
+  afterLoad?: (ctx: DoctorContext) => void | Promise<void>
+  beforeTransform?: (ctx: DoctorContext) => void | Promise<void>
+  afterTransform?: (ctx: DoctorContext) => void | Promise<void>
   buildEnd?: (ctx: DoctorContext) => void | Promise<void>
 }
 
@@ -12,7 +14,7 @@ export type DoctorContext = ReturnType<typeof createContext>
 export function createContext(options: UnpluginOptions) {
   const _id = ''
   const _code = ''
-  const _transformResult = '' as TransformResult
+  const _transformResult = undefined as TransformResult
 
   return {
     id: _id,
@@ -40,20 +42,20 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
 
       async load(this, id) {
         ctx.id = id
+        await lifecycle.beforeLoad?.(ctx)
         const transformResult = await options.load?.bind(this)(id)
         ctx.transformResult = transformResult
-        if (transformResult)
-          await lifecycle.load?.(ctx)
+        await lifecycle.afterLoad?.(ctx)
         return transformResult
       },
 
       async transform(this, code, id) {
         ctx.id = id
         ctx.code = code
+        await lifecycle.beforeTransform?.(ctx)
         const transformResult = await options.transform?.bind(this)(code, id)
         ctx.transformResult = transformResult
-        if (transformResult)
-          await lifecycle.transform?.(ctx)
+        await lifecycle.afterTransform?.(ctx)
         return transformResult
       },
 

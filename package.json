@@ -3,9 +3,14 @@
   "type": "module",
   "version": "0.0.3",
   "description": "",
-  "author": "",
+  "author": "tmg0",
   "license": "MIT",
-  "keywords": [],
+  "keywords": [
+    "unplugin",
+    "plugin",
+    "vite",
+    "analysis"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
