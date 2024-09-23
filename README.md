@@ -1,5 +1,7 @@
 # unplugin-doctor
 
+[![NPM version](https://img.shields.io/npm/v/unplugin-doctor)](https://www.npmjs.com/package/unplugin-doctor)
+
 🩺 Inject lifecycle hooks in [unplugin](https://github.com/unjs/unplugin) tools for better develop experience.
 
 ## Features
