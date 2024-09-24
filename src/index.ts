@@ -1,22 +1,7 @@
-import type { TransformResult, UnpluginInstance, UnpluginOptions } from 'unplugin'
+import type { UnpluginInstance, UnpluginOptions } from 'unplugin'
+import type { DoctorOptions } from './core/types'
 import { createUnplugin } from 'unplugin'
-
-export interface DoctorOptions {
-  buildStart?: (ctx: DoctorContext) => void | Promise<void>
-  beforeLoad?: (id: string, ctx: DoctorContext) => void | Promise<void>
-  afterLoad?: (id: string, code: TransformResult, ctx: DoctorContext) => void | Promise<void>
-  beforeTransform?: (id: string, code: string, ctx: DoctorContext) => void | Promise<void>
-  afterTransform?: (id: string, code: TransformResult, ctx: DoctorContext) => void | Promise<void>
-  buildEnd?: (ctx: DoctorContext) => void | Promise<void>
-}
-
-export type DoctorContext = ReturnType<typeof createContext>
-
-export function createContext(options: UnpluginOptions) {
-  return {
-    options
-  }
-}
+import { createContext } from './core/context'
 
 function toArray<T>(array?: T | T[]): Array<T> {
   array = array || []
@@ -27,11 +12,10 @@ function toArray<T>(array?: T | T[]): Array<T> {
 
 export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<DoctorOptions | undefined>((lifecycle = {}) => {
   const rawPlugins = toArray(unplugin.raw(options, {} as any))
+  const ctx = createContext(rawPlugins)
 
-  const rawOptions: UnpluginOptions[] = rawPlugins.map((options) => {
-    const ctx = createContext(options)
-
-    return {
+  const rawOptions = rawPlugins.map((options) => {
+    const r: UnpluginOptions = {
       ...options,
 
       async buildStart(this) {
@@ -40,16 +24,18 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
       },
 
       async load(this, id) {
-        await lifecycle.beforeLoad?.(id, ctx)
-        const transformResult = await options.load?.bind(this)(id)
-        await lifecycle.afterLoad?.(id, transformResult, ctx)
+        id = await lifecycle.beforeLoad?.(id, ctx) ?? id
+        let transformResult = await options.load?.bind(this)(id)
+        transformResult = await lifecycle.afterLoad?.(id, transformResult, ctx) ?? transformResult
         return transformResult
       },
 
       async transform(this, code, id) {
-        await lifecycle.beforeTransform?.(id, code, ctx)
-        const transformResult = await options.transform?.bind(this)(code, id)
-        await lifecycle.afterTransform?.(id, transformResult, ctx)
+        const { code: _code, id: _id } = await lifecycle.beforeTransform?.(id, code, ctx) ?? {}
+        code = _code ?? code
+        id = _id ?? id
+        let transformResult = await options.transform?.bind(this)(code, id)
+        transformResult = await lifecycle.afterTransform?.(id, transformResult, ctx) ?? transformResult
         return transformResult
       },
 
@@ -58,7 +44,13 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
         await lifecycle.buildEnd?.(ctx)
       },
     }
+
+    ctx.inter.next()
+
+    return r
   })
+
+  ctx.inter.clear()
 
   if (rawPlugins.length > 1)
     return rawOptions
