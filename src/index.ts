@@ -23,6 +23,12 @@ export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<
         await lifecycle.buildStart?.(ctx)
       },
 
+      loadInclude(this, id) {
+        let isInclude = options.loadInclude?.bind(this)(id)
+        isInclude = lifecycle.afterLoadInclude?.(id, isInclude, ctx) ?? isInclude
+        return isInclude
+      },
+
       async load(this, id) {
         id = await lifecycle.beforeLoad?.(id, ctx) ?? id
         let transformResult = await options.load?.bind(this)(id)

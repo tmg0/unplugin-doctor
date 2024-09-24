@@ -12,6 +12,7 @@ export type DoctorContext = ReturnType<typeof createContext>
 
 export interface DoctorOptions {
   buildStart?: (ctx: DoctorContext) => void | Promise<void>
+  afterLoadInclude?: (id: string, isInclude: boolean | null | undefined, ctx: DoctorContext) => void | boolean | null | undefined
   beforeLoad?: (id: string, ctx: DoctorContext) => MaybePromise<string | void>
   afterLoad?: (id: string, code: TransformResult, ctx: DoctorContext) => MaybePromise<TransformResult | void>
   beforeTransform?: (id: string, code: string, ctx: DoctorContext) => MaybePromise<BeforeTransformReturn | void>
