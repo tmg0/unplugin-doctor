@@ -11,19 +11,13 @@ export function createContext(plugins: UnpluginOptions[]) {
     get: () => _index,
   }
 
-  const ctx = {
+  return {
     data,
     plugins,
     inter,
-    runWithContext,
 
     get options() {
       return plugins[_index]
     },
   }
-
-  function runWithContext() {
-  }
-
-  return ctx
 }

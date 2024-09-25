@@ -21,9 +21,15 @@ export interface DoctorOptions {
 }
 
 export interface LifecycleAnalysis {
-  duration: number
+  id?: string
+  duration?: number
+  code?: string
+  transformResult?: TransformResult
 }
 
 export interface DoctorAnalysis {
   buildStart?: LifecycleAnalysis
+  load?: LifecycleAnalysis
+  transform?: LifecycleAnalysis
+  buildEnd?: LifecycleAnalysis
 }
