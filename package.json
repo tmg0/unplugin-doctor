@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
+    "play": "cd playground && pnpm build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

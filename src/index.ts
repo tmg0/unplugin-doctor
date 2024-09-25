@@ -10,7 +10,7 @@ function toArray<T>(array?: T | T[]): Array<T> {
   return [array]
 }
 
-export default <T>(unplugin: UnpluginInstance<T>, options: T) => createUnplugin<DoctorOptions | undefined>((lifecycle = {}) => {
+export default <T>(unplugin: UnpluginInstance<T>, options: T = {} as any) => createUnplugin<DoctorOptions | undefined>((lifecycle = {}) => {
   const rawPlugins = toArray(unplugin.raw(options, {} as any))
   const ctx = createContext(rawPlugins)
 
